@@ -40,10 +40,7 @@ def adviceBG(exitWeightKG, numberOfJumps):
     st.subheader("Advice From Brian Germain's Downsizing Chart")
     # Early Out
     if numberOfJumps > 499:
-        st.write("\tBeyond 500 jumps: After a canopy pilot has exceeded 500 jumps, the only")
-        st.write("\tlimitation on wingloading, size and planform is to be based on the Specific")
-        st.write("\tCanopy Manufacturer’s Recommendations for that design and of the Safety and")
-        st.write("\tTraining Advisor or equivalent instructional staff.\n")
+        st.write("\tBeyond 500 jumps: Follow Canopy Manufacturer’s Recommendations and Guidence from Instructors")
         return
 
     IndexX = [110, 121, 132, 143, 154, 165, 176, 187, 198, 209, 220, 232, 243, 254, 265] # Weight In LBS
@@ -77,11 +74,9 @@ def adviceJS(exitWeight):
 st.title("Canopy Lookup Tool")
 st.write("What canopy size is recommended for you?")
 
-pilotWeight = st.slider('pilotWeight [KG]', 0, 120)
-gearWeight = st.slider('gearWeight [KG]', 10, 20)
+exitWeight = st.slider('exitWeight [KG]', 0, 150)
 numberOfJumps = st.slider('# Jumps', 0, 1001)
 
-exitWeight = pilotWeight+gearWeight
 if exitWeight > 125:
     st.write("Exit Weight Exceeds 125kg which is the maximum of recommended tables.")
 else: 
