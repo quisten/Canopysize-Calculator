@@ -33,7 +33,9 @@ def adviceNLF(exitWeightKG, numberOfJumps):
         #print("%s %s %s" % (rowIndex, reqKey, indexFromWeight))
         canopySize = rec_NLF[rowIndex][reqKey][indexFromWeight]
         wingLoad = exitWeightKG*2.20462/canopySize
-        st.write("\t...........Minimum Allowable Canopysize (NLF): %d sqft @ WL %.2f\n" % (canopySize, wingLoad))
+        wingLoad = float("%.2f" % wingLoad)
+        st.write("\tMinimum Allowable Canopysize (NLF):", canopySize, "sqft @ WL", wingLoad)
+        #st.write("\tMinimum Allowable Canopysize (NLF): %d sqft @ WL %.2f\n" % (canopySize, wingLoad))
 
 def adviceBG(exitWeightKG, numberOfJumps):
     
@@ -51,11 +53,14 @@ def adviceBG(exitWeightKG, numberOfJumps):
         
         canopySize = rec_Brian[rowIndex][reqKey][columnIndex]
         wingLoad = (exitWeightKG*2.20462)/int(canopySize)
+        wingLoad = float("%.2f" % wingLoad)
 
         if reqKey == "Mid":
-            st.write("\tRecommended size is %s sqft @ WL %.2f\n" % (canopySize, wingLoad))
+            #st.write("\tRecommended size is %s sqft @ WL %.2f\n" % (canopySize, wingLoad))
+            st.write("\tRecommended size is:", canopySize, "sqft @ WL", wingLoad)
         else:
-            st.write("\tMinimum size is %s sqft @ WL %.2f\n" % (canopySize, wingLoad))
+            #st.write("\tMinimum size is %s sqft @ WL %.2f\n" % (canopySize, wingLoad))
+            st.write("\tMinimum size is:", canopySize, "sqft @ WL", wingLoad)
 
 def adviceJS(exitWeight):
 
@@ -74,8 +79,8 @@ def adviceJS(exitWeight):
 st.title("Canopy Lookup Tool")
 st.write("What canopy size is recommended for you?")
 
-exitWeight = st.slider('exitWeight [KG]', 0, 150)
-numberOfJumps = st.slider('# Jumps', 0, 1001)
+exitWeight = st.slider('exitWeight [KG]', 40, 150, 100)
+numberOfJumps = st.slider('# Jumps', 0, 1001, 200)
 
 if exitWeight > 125:
     st.write("Exit Weight Exceeds 125kg which is the maximum of recommended tables.")
