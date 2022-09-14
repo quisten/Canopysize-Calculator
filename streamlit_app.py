@@ -88,3 +88,6 @@ else:
     adviceNLF(exitWeight, numberOfJumps)
     adviceBG(exitWeight, numberOfJumps)
     adviceJS(exitWeight)   
+
+
+    #https://uspa.org/canopy-risk-quotient <- really great! 
