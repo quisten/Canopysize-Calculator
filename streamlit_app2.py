@@ -2,19 +2,18 @@ import streamlit as st
 import pandas as pd
 import json
 from random import randint
-
+import matplotlib.pyplot as plt
 
 def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight):
     
     for i, option in enumerate(options):
-
         st.subheader("%s" % option)
         
         if exitWeight > loadedIndices[i][-1]:
-            st.write("Weight exceeds table: Follow Manufactureres Guidelines")
+            st.write("Weight exceeds table.")
             continue
         if numberOfJumps > int(list(loadedTables[i].keys())[-1]):
-            st.write("Jumps exceeds table: Follow Manufactureres Guidelines") 
+            st.write("Jumps exceeds table.") 
             continue
 
         rowIndex = [x for x in loadedTables[i].keys() if int(x)-numberOfJumps > -1][0]
@@ -26,7 +25,6 @@ def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight
             wingLoad = float("%.2f" % wingLoad)
             st.write("Requirement -", reqKey, "- can fly: " ,canopySize, "sqft @ WL", wingLoad)
         
-    
     # Add Jorgen
     if True:
         J_SVANHOLM = ["Du har sett på muligheten av påsying av en annen warninglabel, for eksempel en SA2 170, dermed slipper HI alt ansvar og sier du trodde det var en rolig skjerm.",
@@ -45,6 +43,41 @@ def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight
         st.write("Kommentar: %s" % validReason)
 
     return True
+
+def renderWingloadByWeight(options, loadedTables, loadedIndices, exitWeight):
+
+    show_min = st.checkbox("Show Minimum Accepted Size", True)
+    show_max = st.checkbox("Show Recommended Size", True)
+
+    fig, ax = plt.subplots()
+    for i, option in enumerate(options):
+        columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
+        max_yData, min_yData, xData = list(), list(), list() # jumps vs wingload
+        
+        xData = list()
+        yData = {"max":[], "min":[]}
+    
+        for jumpKey in loadedTables[i].keys():
+            canopySizeMax = max([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+            canopySizeMin = min([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+            yData["max"].append(exitWeight*2.20462/max(50,int(canopySizeMax)))    
+            yData["min"].append(exitWeight*2.20462/max(50,int(canopySizeMin))) 
+            xData.append(int(jumpKey))
+        #st.write(yData)
+        if show_min:
+            ax.plot(xData, yData['max'], label=option+"_Recommended")
+        if yData['max'] != yData['min'] and show_max:
+            ax.plot(xData, yData['min'], label=option+"_Minimum")
+        #rowIndex = [x for x in loadedTables[i].keys() if int(x)-numberOfJumps > -1][0]
+        #columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
+
+        #for reqKey in loadedTables[i]
+    ax.grid(True, alpha=0.2)
+    ax.set_title("Allowed Wingload for %d kilos exitWeight and X jumps" % exitWeight)
+    ax.set_xlabel("Number of Jumps [#]")
+    ax.set_ylabel("WingLoad [lbs/sqft]")
+    plt.legend(loc="upper left")
+    st.pyplot(fig)
 
 def main():
 
@@ -68,13 +101,13 @@ def main():
     # Sliders & Tabs ! 
     exitWeight = st.slider('exitWeight [KG]', 40, 150, 100)
     numberOfJumps = st.slider('# Jumps', 0, 1001, 200)
-    tab1, tab2, tab3 = st.tabs(["Advice", "Table Values", "Wingload Progression"])
+    tab1, tab2, tab3 = st.tabs(["Advice", "Wingload By # Jumps", "Wingload By exitWeight"])
 
     with tab1:
         renderAdvice(options, wingSizeTables, wingSizeIndices, numberOfJumps, exitWeight)
 
     with tab2:
-        pass
+        renderWingloadByWeight(options, wingSizeTables, wingSizeIndices, exitWeight) 
 
     with tab3:
         pass
