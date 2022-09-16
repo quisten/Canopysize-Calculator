@@ -1,8 +1,13 @@
+from re import X
 import streamlit as st
 import pandas as pd
 import json
 from random import randint
 import matplotlib.pyplot as plt
+
+colors = {'Norway':'lightsteelblue', 'Sweden':'olive', 'British':'indianred', 'French':'darkorange', 'Brian_Germain': 'teal'} #https://matplotlib.org/stable/gallery/color/named_colors.html    
+alpha_solid = [.5, .2, .2]
+alpha_dotted = [.8, .3, .3]
 
 def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight):
     
@@ -48,37 +53,127 @@ def renderWingloadByWeight(options, loadedTables, loadedIndices, exitWeight):
 
     show_min = st.checkbox("Show Minimum Accepted Size", True)
     show_max = st.checkbox("Show Recommended Size", True)
+    show_exitWeight = st.checkbox("Show +/- 10kg Effects")
 
-    fig, ax = plt.subplots()
-    for i, option in enumerate(options):
-        columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
-        max_yData, min_yData, xData = list(), list(), list() # jumps vs wingload
+    fig, ax = plt.subplots()  # plt.subplots(figsize=(14, 7))
+    weights = [exitWeight]
+    if show_exitWeight:
+        weights.append(exitWeight+10)
+        weights.append(exitWeight-10)
+
+    for k, exitWeight in enumerate(weights):
+        for i, option in enumerate(options):
+            try:
+                columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
+            except:
+                continue
+            
+            xData = list()
+            yData = {"max":[], "min":[]}
         
-        xData = list()
-        yData = {"max":[], "min":[]}
-    
-        for jumpKey in loadedTables[i].keys():
-            canopySizeMax = max([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
-            canopySizeMin = min([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
-            yData["max"].append(exitWeight*2.20462/max(50,int(canopySizeMax)))    
-            yData["min"].append(exitWeight*2.20462/max(50,int(canopySizeMin))) 
-            xData.append(int(jumpKey))
-        #st.write(yData)
-        if show_min:
-            ax.plot(xData, yData['max'], label=option+"_Recommended")
-        if yData['max'] != yData['min'] and show_max:
-            ax.plot(xData, yData['min'], label=option+"_Minimum")
-        #rowIndex = [x for x in loadedTables[i].keys() if int(x)-numberOfJumps > -1][0]
-        #columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
+            for jumpKey in loadedTables[i].keys():
+                canopySizeMax = max([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+                canopySizeMin = min([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+                yData["max"].append(exitWeight*2.20462/max(50,int(canopySizeMax)))    
+                yData["min"].append(exitWeight*2.20462/max(50,int(canopySizeMin))) 
+                xData.append(int(jumpKey))            
+            
+            label_max = option+"_Recommended"
+            label_min = option+"_Minimum"
+            if k!=0: label_max = label_min = None
 
-        #for reqKey in loadedTables[i]
+            if show_max:
+                ax.plot(xData, yData['max'], label=label_max, linewidth=1.2, alpha=alpha_solid[k], color=colors[option])
+            if yData['max'] != yData['min'] and show_min:
+                ax.plot(xData, yData['min'], label=label_min, linestyle="dotted", linewidth=1.2, alpha=alpha_dotted[k], color=colors[option])
+    
     ax.grid(True, alpha=0.2)
     ax.set_title("Allowed Wingload for %d kilos exitWeight and X jumps" % exitWeight)
     ax.set_xlabel("Number of Jumps [#]")
     ax.set_ylabel("WingLoad [lbs/sqft]")
-    plt.legend(loc="upper left")
+    plt.legend(loc="upper left", fontsize=6)
     st.pyplot(fig)
 
+    return True
+
+def renderWingloadByJumps(options, loadedTables, loadedIndices, numberOfJumps, exitWeight):
+
+    show_min2 = st.checkbox("Show Minimum Accepted Size:", True)
+    show_max2 = st.checkbox("Show Recommended Size:", True)
+    #show_exitWeight = st.checkbox("Show +/- 10kg Effects")
+
+    fig, ax = plt.subplots()  # plt.subplots(figsize=(14, 7))
+
+
+    for i, option in enumerate(options):
+        try:
+            columnIndex = [i for i,x in enumerate(loadedIndices[i]) if x-exitWeight > -1][0]
+            jumpKey = [x for x in loadedTables[i].keys() if int(x)-numberOfJumps > -1][0]
+        
+        except:
+            continue
+        
+        xData = list()
+        yData = {"max":[], "min":[]}
+    
+        #for jumpKey in loadedTables[i].keys():
+        #st.write(loadedIndices[i])
+        for columnIndex, exitWeight2 in enumerate(loadedIndices[i]):
+            
+            canopySizeMax = max([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+            canopySizeMin = min([loadedTables[i][jumpKey][reqKey][columnIndex] for reqKey in loadedTables[i][jumpKey].keys()])
+            yData["max"].append(exitWeight2*2.20462/max(50,int(canopySizeMax)))    
+            yData["min"].append(exitWeight2*2.20462/max(50,int(canopySizeMin))) 
+            #xData.append(int(jumpKey))            
+            xData.append(exitWeight2)
+            #yData[""]
+
+        label_max = option+"_Recommended"
+        label_min = option+"_Minimum"
+
+
+        if show_max2:
+            ax.plot(xData, yData['max'], label=label_max, linewidth=1.2, alpha=alpha_solid[0], color=colors[option])
+        if yData['max'] != yData['min'] and show_min2:
+            ax.plot(xData, yData['min'], label=label_min, linestyle="dotted", linewidth=1.2, alpha=alpha_dotted[0], color=colors[option])
+
+    ax.grid(True, alpha=0.2)
+    ax.set_title("Allowed Wingload for %d jumps and X kilos" % numberOfJumps)
+    ax.set_xlabel("ExitWeight [kg]")
+    ax.set_ylabel("WingLoad [lbs/sqft]")
+    plt.legend(loc="upper left", fontsize=6)
+    st.pyplot(fig)
+
+    return True
+
+def renderDataTables(options, loadedTables, loadedIndices):
+
+    # Convert To Dataframe | Horrible horrible code! sorry mom!
+    dfs = list() 
+    for i, option in enumerate(options): 
+        st.subheader(option)
+        df = pd.DataFrame()#columns=loadedIndices[i])
+        
+        data = dict()
+        df = pd.DataFrame(data, index=loadedTables[i].keys())#columns=loadedIndices[i])
+       
+        for k, indices in enumerate(loadedIndices[i]):
+            data[loadedIndices[i][k]] = list()
+
+        realIndex = list()
+        #st.write(len(loadedTables[i]), len(loadedIndices[i]))
+        for jumpKey in loadedTables[i].keys():
+            for req in loadedTables[i][jumpKey].keys():
+                for k, values in enumerate(loadedTables[i][jumpKey][req]):
+                    try:
+                        data[loadedIndices[i][k]].append(loadedTables[i][jumpKey][req][k])
+                    except:
+                        pass
+                realIndex.append(jumpKey+'  '+req)
+                
+        df = pd.DataFrame(data, index=realIndex)#, index=loadedTables[i].keys())#columns=loadedIndices[i])
+        st.table(df)
+        
 def main():
 
     # Header
@@ -101,7 +196,7 @@ def main():
     # Sliders & Tabs ! 
     exitWeight = st.slider('exitWeight [KG]', 40, 150, 100)
     numberOfJumps = st.slider('# Jumps', 0, 1001, 200)
-    tab1, tab2, tab3 = st.tabs(["Advice", "Wingload By # Jumps", "Wingload By exitWeight"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Advice", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables"])
 
     with tab1:
         renderAdvice(options, wingSizeTables, wingSizeIndices, numberOfJumps, exitWeight)
@@ -110,15 +205,17 @@ def main():
         renderWingloadByWeight(options, wingSizeTables, wingSizeIndices, exitWeight) 
 
     with tab3:
-        pass
+        renderWingloadByJumps(options, wingSizeTables, wingSizeIndices, numberOfJumps, exitWeight)
+    
+    with tab4:
+        renderDataTables(options, wingSizeTables, wingSizeIndices)
 
-    pass
-
+    return True
 if __name__ == "__main__":
     st.set_page_config(
         "Wingload Analyser By Ebbe Smith",
         "📊",
         initial_sidebar_state="expanded",
-        layout="wide",
+        #layout="wide",
     )
     main()
