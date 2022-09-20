@@ -141,8 +141,11 @@ def main():
             importedTable = csv.reader(fin, delimiter=',')
             for i, row in enumerate(importedTable): 
                 row = [int(x) for x in row]
+                row_x = [int(x*.89) for x in row]
+                
                 jumps=IndexY[i]
                 table[jumps]= {"Minimum": row} 
+                table[jumps]= {"Minimum+CP Course": row_x} 
 
         with open("Tables/French_Table.json", "w") as fout:
             json.dump(table, fout, indent=4)
