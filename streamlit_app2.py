@@ -173,7 +173,28 @@ def renderDataTables(options, loadedTables, loadedIndices):
                 
         df = pd.DataFrame(data, index=realIndex)#, index=loadedTables[i].keys())#columns=loadedIndices[i])
         st.table(df)
-        
+
+def renderCurrency(exitWeight, numberOfJumps):
+
+    canopySize = st.slider("Current CanopySize", 69, 210, 150)
+    jumpsOnCurrentSize = st.slider("# Jumps on current Canopy", 0, 500, 50)
+    jumpsLast6m = st.slider("#Jumps last 6m", 0, 1000, 50)
+
+    currentWL = exitWeight*2.20462/canopySize
+
+    wlMax = 2.8
+    wlExp = currentWL+jumpsLast6m*0.001
+    wlWeight = 0.9+(numberOfJumps+jumpsLast6m)*0.0007
+    wlWhat = currentWL+0.25 # If you are conservative
+
+    recWL =min(wlMax, wlExp, wlWhat, wlWeight)
+
+    st.write("Recommended SIze for you is:", recWL, "size", int((exitWeight*2.20462)/recWL), "sqft")
+    st.write("wlMax", wlMax)
+    st.write("wlExp", wlExp)
+    st.write("wlWeight", wlWeight)
+    st.write("wlWhat", wlWhat)
+
 def main():
 
     # Header
@@ -195,8 +216,9 @@ def main():
 
     # Sliders & Tabs ! 
     exitWeight = st.slider('exitWeight [KG]', 40, 150, 100)
-    numberOfJumps = st.slider('# Jumps', 0, 1001, 200)
-    tab1, tab2, tab3, tab4 = st.tabs(["Advice", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables"])
+    numberOfJumps = st.slider('# Jumps', 0, 2001, 200)
+
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Advice", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables", "Based on Currency"])
 
     with tab1:
         renderAdvice(options, wingSizeTables, wingSizeIndices, numberOfJumps, exitWeight)
@@ -209,6 +231,8 @@ def main():
     
     with tab4:
         renderDataTables(options, wingSizeTables, wingSizeIndices)
+    with tab5: 
+        renderCurrency(exitWeight, numberOfJumps)
 
     return True
 if __name__ == "__main__":
