@@ -20,10 +20,12 @@ tab_font_css = """
             """
 hvar = """  <script>
                     var elements = window.parent.document.querySelectorAll('.streamlit-expanderHeader');
-                    elements[0].style.color = 'rgba(183, 36, 118, 1)';
-                    /*elements[0].style.fontFamily = 'Didot';*/
-                    elements[0].style.fontSize = 'large';
-                    elements[0].style.fontWeight = 'bold';
+                    var arrayLength = elements.length;
+                    for (var i =0 ; i< arrayLength; i++) {
+                        elements[i].style.color = 'rgba(183, 56, 68, 1)';
+                        elements[i].style.fontSize = 'large';
+                        elements[i].style.fontWeight = 'normal'; 
+                    }
             </script>"""
 font2_css = """
             <style>
@@ -43,10 +45,10 @@ def applyCSS():
     
     <script>
             var elements = window.parent.document.querySelectorAll('.streamlit-expanderHeader');
-            elements[0].style.color = 'rgba(183, 36, 118, 1)';
+            elements[0].style.color = 'rgba(183, 36, 68, 1)';
             /*elements[0].style.fontFamily = 'Didot';*/
-            elements[0].style.fontSize = 'large';
-            elements[0].style.fontWeight = 'bold';
+            elements[0].style.fontSize = 18px; /*'large';*/
+            elements[0].style.fontWeight = 'normal';
     </script>
 
 
@@ -78,13 +80,7 @@ def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight
     
     #show_min3 = st.checkbox("Show Minimum Accepted Size", True)
     
-    # Build Pandas Table 
-    # RegBody | Category | Size | WL
-
-    with st.expander("Lookup", expanded=True):
-        st.write("Owner | Category | CanopySize | WL")
-    components.html(hvar, height=0, width=0)
-
+    # Make Data Frame
     listOfWL = list()
     for i, option in enumerate(options):
         
@@ -100,44 +96,45 @@ def renderAdvice(options, loadedTables, loadedIndices, numberOfJumps, exitWeight
             canopySize = loadedTables[i][rowIndex][reqKey][columnIndex]
             wingLoad = (exitWeight*2.20462)/int(canopySize)
             wingLoad = float("%.2f" % wingLoad)
-            
-            st.write(option, "category: ", reqKey, "- can fly: " , int(canopySize), "sqft @ WL", wingLoad)
 
             wlEntry = list()
-        
             wlEntry.append(option)
             wlEntry.append(reqKey)
             wlEntry.append(int(canopySize))
             wlEntry.append(wingLoad)
-            
-            listOfWL.append(wlEntry)
+            listOfWL.append(wlEntry) 
+
+    df = pd.DataFrame(listOfWL, columns=['Instance', 'Type', 'CanopySize', 'WL'])
     
-    df = pd.DataFrame(listOfWL, columns=['Regulation', 'Category', 'CanopySize', 'WL'])
 
-    st.subheader("Statistics")
-    st.dataframe(df)
-
-    st.write(df.describe())
-    #st.write(df.CanopySize.describe())
-
+    # RegBody | Category | Size | WL
+    with st.expander("Lookup", expanded=True):
+        df.style.set_properties(subset=['CanopySize'], **{'width': '300px'})
+        st.dataframe(data=df)
         
-    # Add Jorgen
-    if True:
-        J_SVANHOLM = ["Du har sett på muligheten av påsying av en annen warninglabel, for eksempel en SA2 170, dermed slipper HI alt ansvar og sier du trodde det var en rolig skjerm.",
-                "Du drømmer fortsatt om linesus og søkkvåte småjenter på landingsfeltet som omfavner deg når du går som den skygoden du er mot pakkeområdet!",
-                "Få HI til å signere på et blankt ark.",
-                "Dispsøknader gjør seg best på seddler.",
-                "Søk på grunnlag av at skjermen subber i bakken når du går til hangar og den er litt stor å pakke",
-                "Du treng disp på skjerm, kausjonist på boliglån åsså tenkt du å ta ut I3 i samme slengen."]
-        st.subheader("Advice From Jørgen Svanholm")
-            
-        canopySize = randint(67, 92)
-        validReason = J_SVANHOLM[randint(0, 5)]
-        wingLoad = (exitWeight*2.20462)/int(canopySize)
-        wingLoad = float("%.2f" % wingLoad)
-        st.write("\tAnbefalt skjermstørrelse:", canopySize, "sqft @ WL", wingLoad)
-        st.write("Kommentar: %s" % validReason)
+        
+    #df.CanopySize = int(df.CanopySize.replace(' ', ''))
+    with st.expander("Statistics", expanded=True):
+        st.write(df.describe())
     
+    with st.expander("Advice from Jørgen Svanholm", expanded=True):
+        
+        # Add Jorgen
+        if True:
+            J_SVANHOLM = ["Du har sett på muligheten av påsying av en annen warninglabel, for eksempel en SA2 170, dermed slipper HI alt ansvar og sier du trodde det var en rolig skjerm.",
+                    "Du drømmer fortsatt om linesus og søkkvåte småjenter på landingsfeltet som omfavner deg når du går som den skygoden du er mot pakkeområdet!",
+                    "Få HI til å signere på et blankt ark.",
+                    "Dispsøknader gjør seg best på seddler.",
+                    "Søk på grunnlag av at skjermen subber i bakken når du går til hangar og den er litt stor å pakke",
+                    "Du treng disp på skjerm, kausjonist på boliglån åsså tenkt du å ta ut I3 i samme slengen."]
+                
+            canopySize = randint(67, 92)
+            validReason = J_SVANHOLM[randint(0, 5)]
+            wingLoad = (exitWeight*2.20462)/int(canopySize)
+            wingLoad = float("%.2f" % wingLoad)
+            st.write("\tAnbefalt skjermstørrelse:", canopySize, "sqft @ WL", wingLoad)
+            st.write("Kommentar: %s" % validReason)
+        
     return True
 
 def renderWingloadByWeight(options, loadedTables, loadedIndices, exitWeight):
@@ -242,28 +239,28 @@ def renderDataTables(options, loadedTables, loadedIndices):
     # Convert To Dataframe | Horrible horrible code! sorry mom!
     dfs = list() 
     for i, option in enumerate(options): 
-        st.subheader(option)
-        df = pd.DataFrame()#columns=loadedIndices[i])
         
-        data = dict()
-        df = pd.DataFrame(data, index=loadedTables[i].keys())#columns=loadedIndices[i])
-       
-        for k, indices in enumerate(loadedIndices[i]):
-            data[loadedIndices[i][k]] = list()
+        with st.expander(option, expanded=False): #st.subheader(option)
+            df = pd.DataFrame()#columns=loadedIndices[i])
+            data = dict()
+            df = pd.DataFrame(data, index=loadedTables[i].keys())#columns=loadedIndices[i])
+        
+            for k, indices in enumerate(loadedIndices[i]):
+                data[loadedIndices[i][k]] = list()
 
-        realIndex = list()
-        #st.write(len(loadedTables[i]), len(loadedIndices[i]))
-        for jumpKey in loadedTables[i].keys():
-            for req in loadedTables[i][jumpKey].keys():
-                for k, values in enumerate(loadedTables[i][jumpKey][req]):
-                    try:
-                        data[loadedIndices[i][k]].append(loadedTables[i][jumpKey][req][k])
-                    except:
-                        pass
-                realIndex.append(jumpKey+'  '+req)
-                
-        df = pd.DataFrame(data, index=realIndex)#, index=loadedTables[i].keys())#columns=loadedIndices[i])
-        st.table(df)
+            realIndex = list()
+            #st.write(len(loadedTables[i]), len(loadedIndices[i]))
+            for jumpKey in loadedTables[i].keys():
+                for req in loadedTables[i][jumpKey].keys():
+                    for k, values in enumerate(loadedTables[i][jumpKey][req]):
+                        try:
+                            data[loadedIndices[i][k]].append(loadedTables[i][jumpKey][req][k])
+                        except:
+                            pass
+                    realIndex.append(jumpKey+'  '+req)
+                    
+            df = pd.DataFrame(data, index=realIndex)#, index=loadedTables[i].keys())#columns=loadedIndices[i])
+            st.table(df)
 
 def renderCurrency(exitWeight, numberOfJumps):
 
@@ -314,10 +311,8 @@ def main():
         exitWeight = st.slider('Select exitWeight [KG]', 40, 150, 100)
         numberOfJumps = st.slider('Select # Jumps', 0, 2001, 200)
 
-    components.html(hvar, height=0, width=0)
-    #st.write(tab_font_css, unsafe_allow_html=True)
-
-    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Recommendation Lookup", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables", "Based on Currency"])
+    #tab1, tab2, tab3, tab4, tab5 = st.tabs(["Recommendation Lookup", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables", "Based on Currency"])
+    tab1, tab2, tab3, tab4 = st.tabs(["Table Lookups", "Wingload By # Jumps", "Wingload By exitWeight", "Data Tables"])
 
     with tab1:
         renderAdvice(options, wingSizeTables, wingSizeIndices, numberOfJumps, exitWeight)
@@ -330,8 +325,9 @@ def main():
     
     with tab4:
         renderDataTables(options, wingSizeTables, wingSizeIndices)
-    with tab5: 
-        renderCurrency(exitWeight, numberOfJumps)
+ 
+    components.html(hvar, height=0, width=0)
+    st.write("By Ebbe Smith of Norway 2022")
 
     return True
 if __name__ == "__main__":
