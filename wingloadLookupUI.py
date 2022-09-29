@@ -327,7 +327,7 @@ def main():
         renderDataTables(options, wingSizeTables, wingSizeIndices)
  
     components.html(hvar, height=0, width=0)
-    st.write("By Ebbe Smith of Norway 2022")
+    st.write("By Ebbe Smith of Norway 2022 - Version 2.0a")
 
     return True
 if __name__ == "__main__":
